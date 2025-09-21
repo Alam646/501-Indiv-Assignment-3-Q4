@@ -9,21 +9,44 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.indivassignment3q4.ui.theme.IndivAssignment3Q4Theme
+
+// Sealed class for navigation items
+sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
+    object Home : Screen("home", "Home", Icons.Filled.Home)
+    object Settings : Screen("settings", "Settings", Icons.Filled.Settings)
+    object Profile : Screen("profile", "Profile", Icons.Filled.AccountCircle)
+}
+
+val bottomNavItems = listOf(
+    Screen.Home,
+    Screen.Settings,
+    Screen.Profile
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,24 +60,34 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class) // Needed for TopAppBar and other Material 3 components
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainAppScreen(modifier: Modifier = Modifier) {
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior() // Example scroll behavior
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) } // State for selected item
 
     Scaffold(
         modifier = modifier
             .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection), // scroll behavior
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text("Q4 App") },
+                title = { Text("Q4 App - ${currentScreen.label}") }, // Show current screen label
                 scrollBehavior = scrollBehavior
             )
         },
         bottomBar = {
-            BottomAppBar {
-
+            BottomAppBar { // BottomAppBar can host NavigationBar or other elements
+                NavigationBar {
+                    bottomNavItems.forEach { screen ->
+                        NavigationBarItem(
+                            icon = { Icon(screen.icon, contentDescription = screen.label) },
+                            label = { Text(screen.label) },
+                            selected = currentScreen == screen,
+                            onClick = { currentScreen = screen }
+                        )
+                    }
+                }
             }
         },
         floatingActionButton = {
@@ -69,8 +102,9 @@ fun MainAppScreen(modifier: Modifier = Modifier) {
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
+
             Text(
-                text = "App Content Area",
+                text = "Content for ${currentScreen.label}",
             )
         }
     }
