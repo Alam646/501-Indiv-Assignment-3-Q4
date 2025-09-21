@@ -19,6 +19,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -26,16 +28,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.example.indivassignment3q4.ui.theme.IndivAssignment3Q4Theme
+import kotlinx.coroutines.launch
 
-// Sealed class for navigation items
+// Sealed class for navigation items (remains the same)
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Home : Screen("home", "Home", Icons.Filled.Home)
     object Settings : Screen("settings", "Settings", Icons.Filled.Settings)
@@ -64,7 +67,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainAppScreen(modifier: Modifier = Modifier) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) } // State for selected item
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Home) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         modifier = modifier
@@ -72,12 +77,12 @@ fun MainAppScreen(modifier: Modifier = Modifier) {
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text("Q4 App - ${currentScreen.label}") }, // Show current screen label
+                title = { Text("Q4 App - ${currentScreen.label}") },
                 scrollBehavior = scrollBehavior
             )
         },
         bottomBar = {
-            BottomAppBar { // BottomAppBar can host NavigationBar or other elements
+            BottomAppBar {
                 NavigationBar {
                     bottomNavItems.forEach { screen ->
                         NavigationBarItem(
@@ -91,18 +96,24 @@ fun MainAppScreen(modifier: Modifier = Modifier) {
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { /* Snackbar logic will be added here */ }) {
+            FloatingActionButton(
+                onClick = {
+                    scope.launch { // Use scope to launch coroutine
+                        snackbarHostState.showSnackbar("FAB Clicked!") // Show Snackbar
+                    }
+                }
+            ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add")
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) } // Added SnackbarHost
     ) { innerPadding ->
         Box(
             modifier = Modifier
-                .padding(innerPadding)
+                .padding(innerPadding) // Important: Apply innerPadding
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-
             Text(
                 text = "Content for ${currentScreen.label}",
             )
