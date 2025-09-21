@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.indivassignment3q4.ui.theme.IndivAssignment3Q4Theme
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 // Sealed class for navigation items (remains the same)
@@ -71,6 +72,9 @@ fun MainAppScreen(modifier: Modifier = Modifier) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // Removed fabClickCount
+    var currentSnackbarJob by remember { mutableStateOf<Job?>(null) } 
+
     Scaffold(
         modifier = modifier
             .fillMaxSize()
@@ -98,19 +102,24 @@ fun MainAppScreen(modifier: Modifier = Modifier) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    scope.launch { // Use scope to launch coroutine
-                        snackbarHostState.showSnackbar("FAB Clicked!") // Show Snackbar
+                    // Removed fabClickCount increment
+                    currentSnackbarJob?.cancel() 
+                    currentSnackbarJob = scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "FAB Clicked!", // Changed message to be static
+                            // duration = SnackbarDuration.Short 
+                        )
                     }
                 }
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add")
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) } // Added SnackbarHost
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Box(
             modifier = Modifier
-                .padding(innerPadding) // Important: Apply innerPadding
+                .padding(innerPadding) 
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
